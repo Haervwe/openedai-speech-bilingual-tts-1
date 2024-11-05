@@ -2,16 +2,7 @@
   some_other_voice_name_you_want:
     model: voices/choose your own model.onnx
     speaker: set your own speaker
-  onyx:
-    model: voices/en_GB-cori-high.onnx
-    speaker: 159 # 64, 79, 80, 101, 130
-  nova:
-    model: voices/es_MX-claude-high.onnx
-    speaker: 107 # 64, 79, 80, 101, 130
   alloy:
-    model: voices/en_US-lessac-high.onnx
-    speaker: 64 # 64, 79, 80, 101, 130
-  lessac:
     model: voices/en_US-libritts_r-medium.onnx
     speaker: 79 # 64, 79, 80, 101, 130
   echo:
@@ -23,10 +14,10 @@
   fable:
     model: voices/en_GB-northern_english_male-medium.onnx
     speaker: # default speaker
-  cori:
+  onyx:
     model: voices/en_US-libritts_r-medium.onnx
-    speaker: 130 # 55, 90, 132, 136, 137, 159
-  claude-es:
+    speaker: 159 # 55, 90, 132, 136, 137, 159
+  nova:
     model: voices/en_US-libritts_r-medium.onnx
     speaker: 107 # 57, 61, 107, 150, 162
   shimmer:

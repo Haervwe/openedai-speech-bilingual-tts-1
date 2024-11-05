@@ -17,6 +17,7 @@ from loguru import logger
 from openedai import OpenAIStub, BadRequestError, ServiceUnavailableError
 from pydantic import BaseModel
 import uvicorn
+from langdetect import detect
 
 @contextlib.asynccontextmanager
 async def lifespan(app):
@@ -175,6 +176,8 @@ def build_ffmpeg_args(response_format, input_format, sample_rate):
 
     return ffmpeg_args
 
+
+
 @app.post("/v1/audio/speech", response_class=StreamingResponse)
 async def generate_speech(request: GenerateSpeechRequest):
     global xtts, args
@@ -215,12 +218,19 @@ async def generate_speech(request: GenerateSpeechRequest):
     # Use piper for tts-1, and if xtts_device == none use for all models.
     if model == 'tts-1' or args.xtts_device == 'none':
         voice_map = map_voice_to_speaker(voice, 'tts-1')
-        try:
-            piper_model = voice_map['model']
+        # Language detection
+        detected_lang = detect(input_text)
 
-        except KeyError as e:
-            raise ServiceUnavailableError(f"Configuration error: tts-1 voice '{voice}' is missing 'model:' setting. KeyError: {e}")
+        # Select the appropriate model and speaker based on the detected language
+        if detected_lang == 'es':
+            model_key = 'claude-es'
+        else:
+            model_key = voice
+            if model_key not in voice_map:
+                model_key = 'cori'
 
+        voice_map = map_voice_to_speaker(model_key, 'tts-1')
+        piper_model = voice_map['model']
         speaker = voice_map.get('speaker', None)
 
         tts_args = ["piper", "--model", str(piper_model), "--data-dir", "voices", "--download-dir", "voices", "--output-raw"]
@@ -237,17 +247,15 @@ async def generate_speech(request: GenerateSpeechRequest):
             with open(f"{piper_model}.json", 'r') as pvc_f:
                 conf = json.load(pvc_f)
                 sample_rate = str(conf['audio']['sample_rate'])
-
         except:
             sample_rate = '22050'
-  
-        ffmpeg_args = build_ffmpeg_args(response_format, input_format="s16le", sample_rate=sample_rate)
 
-        # Pipe the output from piper/xtts to the input of ffmpeg
+        ffmpeg_args = build_ffmpeg_args(response_format, input_format="s16le", sample_rate=sample_rate)
         ffmpeg_args.extend(["-"])
         ffmpeg_proc = subprocess.Popen(ffmpeg_args, stdin=tts_proc.stdout, stdout=subprocess.PIPE)
 
         return StreamingResponse(content=ffmpeg_proc.stdout, media_type=media_type)
+
     # Use xtts for tts-1-hd
     elif model == 'tts-1-hd':
         voice_map = map_voice_to_speaker(voice, 'tts-1-hd')
