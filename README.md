@@ -1,5 +1,7 @@
 # OpenedAI Speech
 
+This repo fork is almost exatly the same as the original the only modification is a langdetect routine on the piper implementation to make it switch to spanish stt model if spanish is detected if your use case do not require bilingual capabilites with Piper models please use the original repo instead. 
+
 An OpenAI API compatible text to speech server.
 
 * Compatible with the OpenAI audio/speech API
